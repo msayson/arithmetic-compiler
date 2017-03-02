@@ -4,9 +4,7 @@ Compiler for a simple arithmetic language
 #### ArithLang Grammar in BNF Form
 
 ```
-Program ::= Statement* Print
-
-Statement ::= Assign | Print
+Program ::= Assign* Print
 
 Assign ::= IDENTIFIER "=" Expression ";"
 
