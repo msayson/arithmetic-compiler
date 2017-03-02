@@ -62,23 +62,45 @@ public class TestTranslate {
     }
 
     @Test
-    public void printNumber() throws Exception {
+    public void number() throws Exception {
         test("10\n",
                 "print 10;"
         );
     }
 
     @Test
-    public void printSum() throws Exception {
+    public void add() throws Exception {
         test("30\n",
                 "print 10 + 20;"
         );
     }
 
     @Test
-    public void printSumOfArithTerms() throws Exception {
-        test("315\n",
-                "print 5 * 3 + 100 * 3;"
+    public void multiply() throws Exception {
+        test("100\n",
+                "print 5 * 5 * 4;"
+        );
+    }
+
+    @Test
+    public void divide() throws Exception {
+        test("5\n",
+                "print 20 / 4;"
+        );
+    }
+
+    @Test
+    public void addTerms() throws Exception {
+        test("407\n",
+                "print 1 + 2 * 3 + 100 * 4;"
+        );
+    }
+
+    @Test
+    public void comments() throws Exception {
+        test("30\n",
+                "/*\nPrints the sum of 10 and 20.\n*/" +
+                        "print 10 + 20; // Outputs \"30\"."
         );
     }
 

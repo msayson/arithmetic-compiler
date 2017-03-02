@@ -122,15 +122,19 @@ Expression AddExpression() : {
 }
 
 // Parses anything with priority same or higher than *
-// TODO: support division
 Expression MultExpression() :  {
 	Expression e, e2;
+	Token op;
 }
 {	e = PrimaryExpression()
-	(	"*"
+	(   (op = "*" | op = "/")
 	    e2 = PrimaryExpression()
-        { e = new Times(e, e2); }
-	)*
+        { if (op.image.equals("*"))
+            e = new Times(e, e2);
+          else
+            e = new DividedBy(e, e2);
+        }
+    )*
 	{ return e; }
 }
 

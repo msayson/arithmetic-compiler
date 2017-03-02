@@ -1,10 +1,6 @@
 package visitor;
 
 import ast.*;
-import com.sun.corba.se.spi.legacy.interceptor.UnknownType;
-import com.sun.org.apache.xpath.internal.operations.And;
-import ir.tree.IR;
-import jdk.nashorn.internal.ir.Block;
 import util.IndentingWriter;
 
 import java.io.PrintWriter;
@@ -85,6 +81,16 @@ public class StructurePrintVisitor implements Visitor<Void> {
     @Override
     public Void visit(Times n) {
         out.println("Times");
+        out.indent();
+        n.e1.accept(this);
+        n.e2.accept(this);
+        out.outdent();
+        return null;
+    }
+
+    @Override
+    public Void visit(DividedBy n) {
+        out.println("DividedBy");
         out.indent();
         n.e1.accept(this);
         n.e2.accept(this);

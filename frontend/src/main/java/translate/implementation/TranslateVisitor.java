@@ -152,6 +152,11 @@ public class TranslateVisitor implements Visitor<TRExp> {
         return numericOp(Op.MUL, n.e1, n.e2);
     }
 
+    @Override
+    public TRExp visit(DividedBy n) {
+        return numericOp(Op.DIV, n.e1, n.e2);
+    }
+
     //////////////////////////////////////////////////////////////////
 
     @Override

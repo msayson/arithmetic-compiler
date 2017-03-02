@@ -85,6 +85,16 @@ public class PrettyPrintVisitor implements Visitor<Void> {
     }
 
     @Override
+    public Void visit(DividedBy n) {
+        out.print("(");
+        n.e1.accept(this);
+        out.print(" / ");
+        n.e2.accept(this);
+        out.print(")");
+        return null;
+    }
+
+    @Override
     public Void visit(IntegerLiteral n) {
         out.print(n.value);
         return null;

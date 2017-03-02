@@ -63,6 +63,11 @@ public class DefaultVisitor<R> implements Visitor<R> {
     }
 
     @Override
+    public R visit(DividedBy n) {
+        throw new Error("Not implemented");
+    }
+
+    @Override
     public R visit(IntegerLiteral n) {
         throw new Error("Not implemented");
     }

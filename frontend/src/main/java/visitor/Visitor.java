@@ -29,6 +29,8 @@ public interface Visitor<R> {
 
     R visit(Times n);
 
+    R visit(DividedBy n);
+
     R visit(IntegerLiteral n);
 
     R visit(IdentifierExp n);

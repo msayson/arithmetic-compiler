@@ -45,27 +45,39 @@ public class Test3Parse {
     // First let's ensure we can parse the "simplest possible" program:
 
     @Test
-    public void printNumber() throws Exception {
+    public void number() throws Exception {
         accept("print 10;");
     }
 
     @Test
-    public void printSum() throws Exception {
+    public void add() throws Exception {
         accept("print 2 + 5;");
     }
 
     @Test
-    public void printMult() throws Exception {
+    public void multiply() throws Exception {
         accept("print 2 * 5;");
     }
 
     @Test
-    public void simpleAssnSequence() throws Exception {
+    public void divide() throws Exception {
+        accept("print 10 / 5;");
+    }
+
+    @Test
+    public void assignment() throws Exception {
         accept("a = 15;\n" +
                 "b = 20;\n" +
                 "sum = a + b;\n" +
                 "sumTimesTwo = sum * 2;\n" +
                 "print sumTimesTwo;"
+        );
+    }
+
+    @Test
+    public void comments() throws Exception {
+        accept("/*\nPrints the sum of 10 and 20.\n*/" +
+                "print 10 + 20; // Outputs \"30\"."
         );
     }
 
