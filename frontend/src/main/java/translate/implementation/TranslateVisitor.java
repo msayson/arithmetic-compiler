@@ -59,10 +59,6 @@ public class TranslateVisitor implements Visitor<TRExp> {
 
     /////// Helpers //////////////////////////////////////////////
 
-    private boolean atGlobalScope() {
-        return frame.getLabel().equals(L_MAIN);
-    }
-
     /**
      * Create a frame with a given number of formals. We assume that
      * no formals escape, which is the case in ArithLang.
@@ -112,19 +108,10 @@ public class TranslateVisitor implements Visitor<TRExp> {
 
     @Override
     public TRExp visit(Assign n) {
-        IRExp lhs;
-        if (atGlobalScope()) {
-            Label g = Label.get(n.name.name);
-            IRExp zero = IR.CONST(0);
-            IRData data = new IRData(g, util.List.list(zero));
-            frags.add(new DataFragment(frame, data));
-            lhs = IR.MEM(IR.NAME(g));
-            putEnv(n.name.name, lhs);
-        } else {
-            Access var = frame.allocLocal(false);
-            putEnv(n.name.name, var);
-            lhs = var.exp(frame.FP());
-        }
+        Access var = frame.allocLocal(false);
+        putEnv(n.name.name, var);
+        IRExp lhs = var.exp(frame.FP());
+
         TRExp val = n.value.accept(this);
         return new Nx(IR.MOVE(lhs, val.unEx()));
     }
