@@ -1,0 +1,154 @@
+/**
+ * JavaCC file
+ */
+
+options {
+  JDK_VERSION = "1.6";
+  STATIC = false;
+  LOOKAHEAD = 2;
+  FORCE_LA_CHECK = true;
+}
+PARSER_BEGIN(JCCArithLangParser)
+package parser.jcc;
+
+import ast.*;
+import java.util.ArrayList;
+import java.util.List;
+
+public class JCCArithLangParser {
+}
+
+PARSER_END(JCCArithLangParser)
+
+SKIP :
+{	" "
+|	"\r"
+|	"\t"
+|	"\n"
+|	< MULTI_LINE_COMMENT: "/*" (~["*"])* "*" ("*" | ~["*","/"] (~["*"])* "*")* "/" >
+|   < SINGLE_LINE_COMMENT: "//" (~["\n"])* >
+|   < #NOT_STAR_SLASH: ~["*"] | "*" ~["/"] >
+}
+
+TOKEN : /* KEYWORDS */
+{
+    <PRINT:     "print" >
+}
+TOKEN : /* SEPARATORS and OPERATORS*/
+{	<LPAREN:    "(">
+|	<RPAREN:    ")">
+|	<ASSIGN:    "=">
+|	<PLUS:	    "+" >
+|	<MINUS:     "-" >
+|	<MULTIPLY:  "*" >
+|	<DIVIDE:    "/" >
+| 	<SEMICOLON:	";" >
+}
+
+TOKEN :
+{   < INTEGER_LITERAL: ( <DIGIT> )+ >
+|   < IDENTIFIER: <LETTER> (<LETTER> | "_" | <DIGIT>)* >
+|   < #LETTER: ["A" - "Z", "a" - "z"] >
+|   < #DIGIT: ["0" - "9"] >
+}
+
+Program Program() : {
+    List<Statement> statements = new ArrayList<Statement>();
+    Statement stm;
+    Print printStm;
+}
+{
+    (   stm = Assign()
+        { statements.add(stm); }
+    )*
+    printStm = Print()
+	<EOF>
+    { return new Program(statements, printStm); }
+}
+
+Statement Statement() : {
+	Statement s;
+}
+{
+    s = Print()
+    { return s; }
+|   s=Assign()
+    { return s; }
+}
+
+Statement Assign() : {
+	String name;
+	Expression value;
+}
+{
+	(   name=Identifier() "=" value=Expression() ";"
+		{ return new Assign(new IdentifierExp(name), value); }
+	)
+}
+
+Print Print() : {
+    Expression printExpr;
+}
+{
+    "print" printExpr=Expression() ";"
+    { return new Print(printExpr); }
+}
+
+Expression Expression() : {
+	Expression e;
+}
+{
+    e = AddExpression()
+    { return e; }
+|   "(" e = AddExpression() ")"
+    { return e; }
+}
+
+// Parses anything with priority same or higher than +
+Expression AddExpression() : {
+	Expression e, e2;
+	Token op;
+}
+{	e = MultExpression()
+	(   (op = "+" | op = "-")
+		e2 = MultExpression()
+        { if (op.image.equals("+"))
+            e = new Plus(e, e2);
+          else
+            e = new Minus(e, e2);
+        }
+	)*
+	{ return e; }
+}
+
+// Parses anything with priority same or higher than *
+// TODO: support division
+Expression MultExpression() :  {
+	Expression e, e2;
+}
+{	e = PrimaryExpression()
+	(	"*"
+	    e2 = PrimaryExpression()
+        { e = new Times(e, e2); }
+	)*
+	{ return e; }
+}
+
+/* PrimaryExpression is the expression that has highest precedence.*/
+Expression PrimaryExpression() : {
+	Token t;
+	String i;
+}
+{   t = <INTEGER_LITERAL>
+    { return new IntegerLiteral(t.image); }
+|   i = Identifier()
+    { return new IdentifierExp(i); }
+}
+
+String Identifier() : {
+	Token i;
+}
+{
+	i = <IDENTIFIER>
+	{ return i.image; }
+}

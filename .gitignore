@@ -1,0 +1,18 @@
+# Generated files
+frontend/src/main/java/parser/jcc/*.java
+temp*
+
+# Project target files
+frontend/target
+backend/target
+ir/target
+util/target
+x86_64sim/target
+
+# Temporary files
+*.tmp
+*.swp
+
+# Workspace files
+.idea/
+
