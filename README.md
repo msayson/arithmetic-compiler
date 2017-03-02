@@ -1,7 +1,7 @@
 # arithmetic-compiler
 Compiler for a simple arithmetic language
 
-ArithLang Grammar in BNF Form:
+#### ArithLang Grammar in BNF Form
 
 ```
 Program ::= Statement* Print
@@ -17,6 +17,18 @@ Expression ::= MultExpression ( ("+"|"-") MultExpression ) *
 MultExpression ::= PrimaryExpression ( ("*"|"/") PrimaryExpression ) *
 
 PrimaryExpression ::= NUMBER_LITERAL | IDENTIFIER
+```
+
+#### Example Programs
+
+The end of every program is a print statement.
+```
+print 5 * 5 * 4; // Outputs "200"
+```
+
+Following arithmetic conventions, multiplication and division are evaluated before addition and subtraction.
+```
+print 1 + 2 * 3 + 100 * 4; // Outputs "407"
 ```
 
 This source code extends the starter MiniJava project from UBC's undergraduate compiler course, "CPSC 411 Introduction to Compiler Construction".
