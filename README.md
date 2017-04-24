@@ -37,6 +37,12 @@ This is a multi-line comment
 print 1 + 2; // This is a single-line comment
 ```
 
+Variables can be assigned to break calculations into manageable parts.
+```
+sum = 10 + 20;
+print 1 + sum * 2; // Outputs "61"
+```
+
 This source code extends the starter MiniJava project from UBC's undergraduate compiler course, "CPSC 411 Introduction to Compiler Construction".
 [http://www.ugrad.cs.ubc.ca/~cs411/2016w2/](http://www.ugrad.cs.ubc.ca/~cs411/2016w2/)
 
