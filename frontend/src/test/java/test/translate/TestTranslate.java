@@ -6,15 +6,8 @@ import ir.interp.Interp;
 import ir.interp.InterpMode;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import translate.Fragment;
 import translate.Fragments;
 import translate.Translator;
-import util.SampleCode;
-import util.Utils;
-
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
 
 /**
  * Test the arithlang translation phase that takes a program and turns
@@ -127,97 +120,6 @@ public class TestTranslate {
                         "y = 100 * 3;\n" +
                         "z = x + y;\n" +
                         "print z;");
-    }
-
-    //////////////// Sample code //////////////////////////////////
-
-    @Test
-    public void testSampleCode() throws Exception {
-        File[] files = SampleCode.sampleFiles("java");
-        for (int i = 0; i < files.length; i++) {
-            File f = files[i];
-            if (!optionalSample(f))
-                test(f);
-        }
-    }
-
-    protected Fragments test(File program) throws Exception {
-        System.out.println("Translating: " + program);
-        System.out.println(Utils.getContents(program));
-        String expected = Utils.getExpected(program);
-        String otherexpected = Utils.getOtherExpected(program);
-        if (otherexpected != null) {
-            return test(expected, otherexpected, program);
-        } else {
-            return test(expected, program);
-        }
-    }
-
-    protected Fragments translate(File program) throws Exception {
-        Fragments translated = Translator.translate(architecture, program);
-        if (dumpIR()) {
-            System.out.println("VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV");
-            System.out.println(translated);
-            System.out.println();
-        }
-        if (dumpIRToFile()) {
-            String iroutname = Utils.changeSuffix(program, "ir");
-            File irout = new File(iroutname);
-            BufferedWriter irouts = new BufferedWriter(new FileWriter(irout));
-
-            for (Fragment f : translated) {
-                irouts.write(f.toString());
-                irouts.write("\n");
-            }
-            irouts.close();
-        }
-        return translated;
-    }
-
-    protected String run(Fragments translated) {
-        String result = null;
-        if (getSimulationMode() != null) {
-            System.out.println("Simulating IR code:");
-            Interp interp = new Interp(translated, getSimulationMode());
-
-            try {
-                result = interp.run();
-            } catch (Error e) {
-                System.out.println(e.getMessage());
-                e.printStackTrace();
-                result = e.getMessage();
-            }
-        }
-        return result;
-    }
-
-    protected Fragments test(String expected, File program)
-            throws Exception {
-        Fragments translated = translate(program);
-        if (getSimulationMode() != null) {
-            String result = run(translated);
-            System.out.println(result);
-            Assertions.assertEquals(expected, result);
-        }
-        System.out.println("=================================");
-        return translated;
-    }
-
-    protected Fragments test(String expected, String otherexpected, File program)
-            throws Exception {
-        Fragments translated = translate(program);
-        if (getSimulationMode() != null) {
-            String result = run(translated);
-            System.out.println(result);
-            Assertions.assertTrue(expected.equals(result) ||
-                    otherexpected.equals(result));
-        }
-        System.out.println("=================================");
-        return translated;
-    }
-
-    private boolean optionalSample(File f) {
-        return f.toString().endsWith("Visitor.java");
     }
 
     protected Fragments test(String expected, String program) throws Exception {
