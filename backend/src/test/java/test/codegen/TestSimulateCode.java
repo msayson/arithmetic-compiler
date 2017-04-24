@@ -6,11 +6,8 @@ import org.junit.jupiter.api.AfterAll;
 import test.translate.TestTranslate;
 import test.util.BackendTestUtils;
 import translate.Fragments;
-import util.Utils;
 import x86_64sim.Sim;
 import x86_64sim.State;
-
-import java.io.File;
 
 /**
  * So what we will do is simply to compile again all the TestTranslate programs into
@@ -30,16 +27,6 @@ public class TestSimulateCode extends TestTranslate {
     @Override
     protected InterpMode getSimulationMode() {
         return null; // means don't simulate IR code.
-    }
-
-    @Override
-    protected Fragments test(File program) throws Exception {
-        Fragments translated = super.test(program);
-        //		System.out.println("Generating assembly for "+program);
-        String expected = Utils.getExpected(program);
-        String result = test(translated);
-        BackendTestUtils.check(expected, result);
-        return null; // doesn't matter right now.
     }
 
     @Override

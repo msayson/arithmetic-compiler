@@ -1,19 +1,18 @@
 package analysis.implementation;
 
-import ir.temp.Temp;
-
-import java.util.Collections;
-import java.util.HashMap;
-
-import util.List;
-
 import analysis.FlowGraph;
 import analysis.Liveness;
 import analysis.util.ActiveSet;
 import analysis.util.graph.Node;
+import ir.temp.Temp;
+import util.List;
+
+import java.util.Collections;
 
 
 public class LivenessImplementation<N> extends Liveness<N> {
+
+    List<Node<N>> visited = List.theEmpty();
 
     public LivenessImplementation(FlowGraph<N> graph) {
         super(graph);
@@ -21,13 +20,37 @@ public class LivenessImplementation<N> extends Liveness<N> {
 
     @Override
     public List<Temp> liveOut(Node<N> node) {
-        // This dummy implementation says that nothing is live
-        return List.empty();
+        visited = List.theEmpty();
+        return liveOutInternal(node);
+    }
+
+    private List<Temp> liveOutInternal(Node<N> node) {
+        //Collect all temps used in successors
+        ActiveSet<Temp> liveOutTemps = new ActiveSet<>();
+
+        List<Node<N>> successors = node.succ();
+        for (Node<N> successor : successors) {
+            if (!visited.contains(successor)) {
+                visited = List.cons(successor, visited);
+                liveOutTemps.addAll(liveInInternal(successor));
+            }
+        }
+        return liveOutTemps.getElements();
     }
 
     private List<Temp> liveIn(Node<N> node) {
-        // This dummy implementation says that nothing is live
-        return List.empty();
+        visited = List.theEmpty();
+        return liveInInternal(node);
+    }
+
+    // Return use(node) UNION (out(node) - def(node))
+    private List<Temp> liveInInternal(Node<N> node) {
+        ActiveSet<Temp> liveInTemps = new ActiveSet<>();
+        liveInTemps.addAll(liveOutInternal(node));
+        liveInTemps = liveInTemps.remove(g.def(node)); // out(node) - def(node)
+
+        liveInTemps.addAll(g.use(node)); // use(node) UNION (out(node) - def(node))
+        return liveInTemps.getElements();
     }
 
     private String shortList(List<Temp> l) {

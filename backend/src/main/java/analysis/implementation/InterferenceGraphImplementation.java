@@ -1,17 +1,18 @@
 package analysis.implementation;
 
+import analysis.FlowGraph;
+import analysis.InterferenceGraph;
+import analysis.util.graph.Node;
+import codegen.assem.A_MOVE;
+import ir.temp.Color;
+import ir.temp.Temp;
+import util.IndentingWriter;
+import util.List;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-
-import util.IndentingWriter;
-import util.List;
-import ir.temp.Color;
-import ir.temp.Temp;
-import analysis.FlowGraph;
-import analysis.InterferenceGraph;
-import analysis.util.graph.Node;
 
 public class InterferenceGraphImplementation<N> extends InterferenceGraph {
 
@@ -22,15 +23,42 @@ public class InterferenceGraphImplementation<N> extends InterferenceGraph {
     public InterferenceGraphImplementation(FlowGraph<N> fg) {
         this.fg = fg;
         this.liveness = new LivenessImplementation<N>(fg);
-        // This "dummy" implementation just adds nodes, but no edges
+
         for (Node<N> node : fg.nodes()) {
-            for (Temp def : fg.def(node)) {
-                Node<Temp> n = nodeFor(def);
-            }
-            for (Temp use : fg.use(node)) {
-                Node<Temp> n = nodeFor(use);
+            List<Temp> liveOutTemps = liveness.liveOut(node);
+            N info = node.wrappee();
+
+            if (info instanceof A_MOVE) {
+                Temp src = ((A_MOVE) info).src;
+                Temp dst = ((A_MOVE) info).dst;
+                Node<Temp> srcNode = nodeFor(src);
+                Node<Temp> dstNode = nodeFor(dst);
+                moves = List.cons(new Move(dstNode, srcNode), moves);
+
+                // At a move instruction a ← c, where variables {b_1, ..., b_j} are live-out, add
+                // interference edges (a, b_i) for any b_i != c.
+                for (Temp liveOutTemp : liveOutTemps) {
+                    if (!liveOutTemp.equals(src) && !liveOutTemp.equals(dst)) {
+                        addBidirectionalEdge(dstNode, nodeFor(liveOutTemp));
+                    }
+                }
+            } else {
+                // At any non-move instruction that defines a variable a, where the live-out variables
+                // are {b_1, ..., b_j}, add interference edges {(a, b_1), ..., (a, b_j)}.
+                for (Temp def : fg.def(node)) {
+                    for (Temp liveOutTemp : liveOutTemps) {
+                        if (!liveOutTemp.equals(def)) {
+                            addBidirectionalEdge(nodeFor(def), nodeFor(liveOutTemp));
+                        }
+                    }
+                }
             }
         }
+    }
+
+    private void addBidirectionalEdge(Node<Temp> n1, Node<Temp> n2) {
+        addEdge(n1, n2);
+        addEdge(n2, n1);
     }
 
     @Override
@@ -49,7 +77,6 @@ public class InterferenceGraphImplementation<N> extends InterferenceGraph {
         out.print("Moves");
         out.println(moves);
     }
-
 
     private Color colorOf(Temp t, Map<Temp, Color> xcolorMap) {
         Color c = null;

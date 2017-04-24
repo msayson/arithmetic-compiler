@@ -6,8 +6,6 @@ import org.junit.jupiter.api.AfterAll;
 import test.translate.TestTranslate;
 import translate.Fragments;
 
-import java.io.File;
-
 /**
  * Unfortunately, there's no good way that I can think of to test this phase
  * reliably.
@@ -39,14 +37,6 @@ public class TestCodegen extends TestTranslate {
     @Override
     protected InterpMode getSimulationMode() {
         return null; // means don't simulate IR code.
-    }
-
-    @Override
-    protected Fragments test(File program) throws Exception {
-        Fragments translated = super.test(program);
-        System.out.println("Generating assembly for " + program);
-        test(translated);
-        return null; // doesn't matter right now.
     }
 
     @Override

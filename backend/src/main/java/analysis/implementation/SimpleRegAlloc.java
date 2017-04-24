@@ -1,25 +1,23 @@
 package analysis.implementation;
 
+import analysis.FlowGraph;
+import analysis.InterferenceGraph;
+import analysis.RegAlloc;
+import analysis.util.MinDegreeNodeQueue;
+import analysis.util.graph.Node;
+import codegen.AssemProc;
+import codegen.assem.Instr;
 import ir.frame.Frame;
 import ir.temp.Color;
 import ir.temp.Temp;
+import util.IndentingWriter;
+import util.List;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.Map;
-
-import util.IndentingWriter;
-import util.List;
-
-import codegen.AssemProc;
-import codegen.assem.Instr;
-
-import analysis.FlowGraph;
-import analysis.InterferenceGraph;
-import analysis.RegAlloc;
-import analysis.util.graph.Node;
 
 public class SimpleRegAlloc extends RegAlloc {
 
@@ -143,24 +141,23 @@ public class SimpleRegAlloc extends RegAlloc {
     /**
      * Returns a List of Temp's (a stack really) which suggest the order
      * in which nodes should be assigned colors.
-     * <p>
-     * This version just returns an arbitrary order.
      */
     private List<Temp> simplify() {
-        List<Node<Temp>> toColor = List.empty();
         List<Temp> ordering = List.empty();
         int simplified = 0;
 
-        // Separate pre-colored nodes from other nodes.
-        for (Node<Temp> node : ig.nodes())
-            if (!isColored(node))
+        // Initialize toColor priority queue
+        MinDegreeNodeQueue toColor = new MinDegreeNodeQueue();
+        for (Node<Temp> node : ig.nodes()) {
+            if (!isColored(node)) { // Ignore pre-colored nodes
                 toColor.add(node);
+            }
+        }
 
+        // Iteratively colour the min-degree temp
         while (!toColor.isEmpty()) {
-            Node<Temp> node = toColor.head();
-            toColor = toColor.delete(node);
+            Node<Temp> node = toColor.next();
             ordering = List.cons(node.wrappee(), ordering);
-            // this.ig.rmNode(node);
             if (generateDotFiles) {
                 File out = new File("simplify-" + incarnation + "-" + simplified + ".dot");
                 try {

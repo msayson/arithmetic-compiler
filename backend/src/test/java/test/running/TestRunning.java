@@ -5,7 +5,6 @@ import driver.Runner;
 import test.translate.TestTranslate;
 import test.util.BackendTestUtils;
 import translate.Fragments;
-import util.Utils;
 
 import java.io.File;
 
@@ -23,20 +22,6 @@ public class TestRunning extends TestTranslate {
 
     Compiler compiler = new Compiler();
     Runner runner = new Runner();
-
-    @Override
-    protected Fragments test(String expected, File program) throws Exception {
-        String assemFileName = Utils.changeSuffix(program, "s");
-        File assemFile = new File(assemFileName);
-
-        System.out.println("compiling: " + program);
-        compiler.compile(program, assemFile);
-        System.out.println(">>>>>  " + assemFile);
-
-        String output = runner.run(assemFile);
-        BackendTestUtils.check(expected, output, false);
-        return null;
-    }
 
     @Override
     protected Fragments test(String expected, String program) throws Exception {
