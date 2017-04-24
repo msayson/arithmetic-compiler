@@ -112,24 +112,22 @@ public class TestTranslate {
         );
     }
 
-    //TODO
-//    @Test
-//    public void singleAssignmentAndPrintArith() throws Exception {
-//        test("61\n",
-//                "sum = 10 + 20;\n" +
-//                        "print 1 + sum * 2;"
-//        );
-//    }
+    @Test
+    public void singleAssignmentAndPrintArith() throws Exception {
+        test("61\n",
+                "sum = 10 + 20;\n" +
+                        "print 1 + sum * 2;"
+        );
+    }
 
-    //TODO: Support multiple assignments
-//    @Test
-//    public void multipleAssignments() throws Exception {
-//        test("315\n",
-//                "x = 5 * 3;\n" +
-//                        "y = 100 * 3;\n" +
-//                        "z = x + y;\n" +
-//                        "print z;");
-//    }
+    @Test
+    public void multipleAssignments() throws Exception {
+        test("315\n",
+                "x = 5 * 3;\n" +
+                        "y = 100 * 3;\n" +
+                        "z = x + y;\n" +
+                        "print z;");
+    }
 
     //////////////// Sample code //////////////////////////////////
 
