@@ -1,36 +1,5 @@
 package codegen.x86_64;
 
-import static codegen.patterns.IRPat.CALL;
-import static codegen.patterns.IRPat.CJUMP;
-import static codegen.patterns.IRPat.CMOVE;
-import static codegen.patterns.IRPat.CONST;
-import static codegen.patterns.IRPat.EXP;
-import static codegen.patterns.IRPat.JUMP;
-import static codegen.patterns.IRPat.LABEL;
-import static codegen.patterns.IRPat.MEM;
-import static codegen.patterns.IRPat.MINUS;
-import static codegen.patterns.IRPat.MOVE;
-import static codegen.patterns.IRPat.MUL;
-import static codegen.patterns.IRPat.NAME;
-import static codegen.patterns.IRPat.PLUS;
-import static codegen.patterns.IRPat.TEMP;
-import static ir.frame.x86_64.X86_64Frame.RAX;
-import static ir.frame.x86_64.X86_64Frame.RDX;
-import static ir.frame.x86_64.X86_64Frame.RV;
-import static ir.frame.x86_64.X86_64Frame.arguments;
-import static ir.frame.x86_64.X86_64Frame.callerSave;
-import static ir.frame.x86_64.X86_64Frame.special;
-import static util.List.list;
-
-import util.IndentingWriter;
-import util.List;
-import ir.frame.Frame;
-import ir.temp.Label;
-import ir.temp.Temp;
-import ir.tree.IR;
-import ir.tree.IRExp;
-import ir.tree.IRStm;
-import ir.tree.CJUMP.RelOp;
 import codegen.assem.A_LABEL;
 import codegen.assem.A_MOVE;
 import codegen.assem.A_OPER;
@@ -41,6 +10,19 @@ import codegen.muncher.MuncherRules;
 import codegen.patterns.Matched;
 import codegen.patterns.Pat;
 import codegen.patterns.Wildcard;
+import ir.frame.Frame;
+import ir.temp.Label;
+import ir.temp.Temp;
+import ir.tree.CJUMP.RelOp;
+import ir.tree.IR;
+import ir.tree.IRExp;
+import ir.tree.IRStm;
+import util.IndentingWriter;
+import util.List;
+
+import static codegen.patterns.IRPat.*;
+import static ir.frame.x86_64.X86_64Frame.*;
+import static util.List.list;
 
 /**
  * This Muncher implements the munching rules for a subset
@@ -201,6 +183,19 @@ public class X86_64Muncher extends Muncher {
                 return t;
             }
         });
+        em.add(new MunchRule<IRExp, Temp>(PLUS(_l_, CONST(_i_))) {
+            @Override
+            protected Temp trigger(Muncher m, Matched c) {
+                Temp sum = new Temp();
+                m.emit(A_MOV(sum, m.munch(c.get(_l_))));
+
+                int addition = c.get(_i_);
+                if (addition != 0) {
+                    m.emit(A_ADD(sum, addition));
+                }
+                return sum;
+            }
+        });
         em.add(new MunchRule<IRExp, Temp>(PLUS(_l_, _r_)) {
             @Override
             protected Temp trigger(Muncher m, Matched c) {
@@ -208,6 +203,19 @@ public class X86_64Muncher extends Muncher {
                 m.emit(A_MOV(sum, m.munch(c.get(_l_))));
                 m.emit(A_ADD(sum, m.munch(c.get(_r_))));
                 return sum;
+            }
+        });
+        em.add(new MunchRule<IRExp, Temp>(MINUS(_l_, CONST(_i_))) {
+            @Override
+            protected Temp trigger(Muncher m, Matched c) {
+                Temp res = new Temp();
+                m.emit(A_MOV(res, m.munch(c.get(_l_))));
+
+                int deduction = c.get(_i_);
+                if (deduction != 0) {
+                    m.emit(A_SUB(res, deduction));
+                }
+                return res;
             }
         });
         em.add(new MunchRule<IRExp, Temp>(MINUS(_l_, _r_)) {
@@ -219,13 +227,29 @@ public class X86_64Muncher extends Muncher {
                 return res;
             }
         });
+        em.add(new MunchRule<IRExp, Temp>(MUL(_l_, CONST(_i_))) {
+            @Override
+            protected Temp trigger(Muncher m, Matched c) {
+                Temp product = new Temp();
+                int multiplier = c.get(_i_);
+                if (multiplier == 0) {
+                    m.emit(A_MOV(product, 0));
+                    return product;
+                }
+                m.emit(A_MOV(product, m.munch(c.get(_l_))));
+                if (multiplier != 1) {
+                    m.emit(A_IMUL(product, c.get(_i_)));
+                }
+                return product;
+            }
+        });
         em.add(new MunchRule<IRExp, Temp>(MUL(_l_, _r_)) {
             @Override
             protected Temp trigger(Muncher m, Matched c) {
-                Temp res = new Temp();
-                m.emit(A_MOV(res, m.munch(c.get(_l_))));
-                m.emit(A_IMUL(res, m.munch(c.get(_r_))));
-                return res;
+                Temp product = new Temp();
+                m.emit(A_MOV(product, m.munch(c.get(_l_))));
+                m.emit(A_IMUL(product, m.munch(c.get(_r_))));
+                return product;
             }
         });
         em.add(new MunchRule<IRExp, Temp>(TEMP(_t_)) {
@@ -283,6 +307,45 @@ public class X86_64Muncher extends Muncher {
                 list(src, dst));
     }
 
+    private static Instr A_ADD(Temp dst, int value) {
+        return new A_OPER("addq    $" + value + ", `d0",
+                list(dst),
+                list(dst));
+    }
+
+    private static Instr A_SUB(Temp dst, Temp src) {
+        return new A_OPER("subq    `s0, `d0",
+                list(dst),
+                list(src, dst));
+    }
+
+    private static Instr A_SUB(Temp dst, int value) {
+        return new A_OPER("subq    $" + value + ", `d0",
+                list(dst),
+                list(dst));
+    }
+
+    private static Instr A_IMUL(Temp dst, Temp src) {
+        return new A_OPER("imulq   `s0, `d0",
+                list(dst),
+                list(src, dst));
+    }
+
+    private static Instr A_IMUL(Temp dst, int value) {
+        return new A_OPER("imulq    $" + value + ", `d0",
+                list(dst),
+                list(dst));
+    }
+
+    private static Instr A_IDIV(Temp dst, Temp src) {
+        return new A_OPER("movq    `d0, %rax\n" +
+                "   cqto\n" +
+                "   idivq   `s0\n" +
+                "   movq    %rax, `d0",
+                list(dst, RAX, RDX),
+                list(src, dst));
+    }
+
     private static Instr A_CALL(Label fun, int nargs) {
         List<Temp> args = List.empty();
         for (int i = 0; i < Math.min(arguments.size(), nargs); ++i) {
@@ -332,21 +395,6 @@ public class X86_64Muncher extends Muncher {
 
     private static Instr A_CMP(Temp l, Temp r) {
         return new A_OPER("cmpq    `s1, `s0", noTemps, list(l, r));
-    }
-
-    private static Instr A_IMUL(Temp dst, Temp src) {
-        return new A_OPER("imulq   `s0, `d0",
-                list(dst),
-                list(src, dst));
-    }
-
-    private static Instr A_IDIV(Temp dst, Temp src) {
-        return new A_OPER("movq    `d0, %rax\n" +
-                "   cqto\n" +
-                "   idivq   `s0\n" +
-                "   movq    %rax, `d0",
-                list(dst, RAX, RDX),
-                list(src, dst));
     }
 
     private static Instr A_JMP(Label target) {
@@ -418,12 +466,6 @@ public class X86_64Muncher extends Muncher {
 
     private static Instr A_MOV_FROM_MEM(Temp d, Temp ptr) {
         return new A_OPER("movq    (`s0), `d0", list(d), list(ptr));
-    }
-
-    private static Instr A_SUB(Temp dst, Temp src) {
-        return new A_OPER("subq    `s0, `d0",
-                list(dst),
-                list(src, dst));
     }
 
     public static void dumpRules() {
